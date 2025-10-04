@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Cosmos Explorer</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1111d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101022",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200">
+    <div class="flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="border-b border-slate-200 dark:border-slate-800">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 text-primary">
+                            <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                <path clip-rule="evenodd" d="M39.475 21.6262C40.358 21.4363 40.6863 21.5589 40.7581 21.5934C40.7876 21.655 40.8547 21.857 40.8082 22.3336C40.7408 23.0255 40.4502 24.0046 39.8572 25.2301C38.6799 27.6631 36.5085 30.6631 33.5858 33.5858C30.6631 36.5085 27.6632 38.6799 25.2301 39.8572C24.0046 40.4502 23.0255 40.7407 22.3336 40.8082C21.8571 40.8547 21.6551 40.7875 21.5934 40.7581C21.5589 40.6863 21.4363 40.358 21.6262 39.475C21.8562 38.4054 22.4689 36.9657 23.5038 35.2817C24.7575 33.2417 26.5497 30.9744 28.7621 28.762C30.9744 26.5497 33.2417 24.7574 35.2817 23.5037C36.9657 22.4689 38.4054 21.8562 39.475 21.6262ZM4.41189 29.2403L18.7597 43.5881C19.8813 44.7097 21.4027 44.9179 22.7217 44.7893C24.0585 44.659 25.5148 44.1631 26.9723 43.4579C29.9052 42.0387 33.2618 39.5667 36.4142 36.4142C39.5667 33.2618 42.0387 29.9052 43.4579 26.9723C44.1631 25.5148 44.659 24.0585 44.7893 22.7217C44.9179 21.4027 44.7097 19.8813 43.5881 18.7597L29.2403 4.41187C27.8527 3.02428 25.8765 3.02573 24.2861 3.36776C22.6081 3.72863 20.7334 4.58419 18.8396 5.74801C16.4978 7.18716 13.9881 9.18353 11.5858 11.5858C9.18354 13.988 7.18717 16.4978 5.74802 18.8396C4.58421 20.7334 3.72865 22.6081 3.36778 24.2861C3.02574 25.8765 3.02429 27.8527 4.41189 29.2403Z" fill="currentColor" fill-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <h1 class="text-xl font-bold text-slate-900 dark:text-white">Cosmos Explorer</h1>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <nav class="hidden sm:flex items-center gap-4">
+                            <button onclick="showPage('dashboard')" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary">Dashboard</button>
+                            <button onclick="showPage('upload')" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary">Upload Data</button>
+                            <button onclick="showPage('exoplanets')" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary">Exoplanets</button>
+                        </nav>
+                        <button class="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-100 dark:focus:ring-offset-slate-800 focus:ring-primary">
+                            <svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M140,180a12,12,0,1,1-12-12A12,12,0,0,1,140,180ZM128,72c-22.06,0-40,16.15-40,36v4a8,8,0,0,0,16,0v-4c0-11,10.77-20,24-20s24,9,24,20-10.77,20-24,20a8,8,0,0,0-8,8v8a8,8,0,0,0,16,0v-.72c18.24-3.35,32-17.9,32-35.28C168,88.15,150.06,72,128,72Zm104,56A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"></path>
+                            </svg>
+                        </button>
+                        <div class="w-10 h-10 rounded-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAg3OYTbDkozFgejwtSTdXrCzrt0yA-3yQKXDuiPpZDz-P0JvzxIXoeZH66hLmSwS7o7G8yibWNTTvYUYqUUFA538R0bx3y_0f3v-G9Ukq74snHjCa2DD8j00tmB5VVGrTKi12-eZDMVG_vYovJhkXGL4wy6VSgQNx9Fl6OOPz3S8kd7dXqXWsaDT8jRonvaGNB7vMYjsEjVgm7TyC_4Se14cXSt-6hSyZD82aLQVfxWXvHxTRSgztt0xRM_Hbb7aDGHn0CF6ieXUBV");'></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Mobile Navigation -->
+        <div class="sm:hidden border-b border-slate-200 dark:border-slate-800">
+            <div class="container mx-auto px-4 py-2 flex justify-around">
+                <button onclick="showPage('dashboard')" class="text-sm font-medium px-3 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Dashboard</button>
+                <button onclick="showPage('upload')" class="text-sm font-medium px-3 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Upload</button>
+                <button onclick="showPage('exoplanets')" class="text-sm font-medium px-3 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Exoplanets</button>
+            </div>
+        </div>
+
+        <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page active">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Exoplanet Identification</h2>
+                    <div class="mt-6">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg aria-hidden="true" class="h-5 w-5 text-slate-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path clip-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" fill-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <input class="block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-700 rounded-lg leading-5 bg-white dark:bg-slate-900 placeholder-slate-400 focus:outline-none focus:placeholder-slate-500 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm" id="search-exoplanets" name="search-exoplanets" placeholder="Search for exoplanets" type="text"/>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Model Statistics</h3>
+                        <div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
+                            <div class="bg-white dark:bg-slate-900/70 overflow-hidden shadow rounded-lg">
+                                <div class="p-5">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Accuracy</div>
+                                            <div class="mt-1 text-3xl font-semibold text-slate-900 dark:text-white">95%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-slate-900/70 overflow-hidden shadow rounded-lg">
+                                <div class="p-5">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Precision</div>
+                                            <div class="mt-1 text-3xl font-semibold text-slate-900 dark:text-white">92%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-slate-900/70 overflow-hidden shadow rounded-lg">
+                                <div class="p-5">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Recall</div>
+                                            <div class="mt-1 text-3xl font-semibold text-slate-900 dark:text-white">90%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Identified Exoplanets</h3>
+                        <div class="mt-4 flex flex-col">
+                            <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                                    <div class="shadow overflow-hidden border-b border-slate-200 dark:border-slate-800 sm:rounded-lg">
+                                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+                                            <thead class="bg-slate-50 dark:bg-slate-800/50">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider" scope="col">Name</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider" scope="col">Orbital Period (days)</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider" scope="col">Transit Duration (hours)</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider" scope="col">Radius (Earth radii)</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider" scope="col">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white dark:bg-slate-900/70 divide-y divide-slate-200 dark:divide-slate-800">
+                                                <tr>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
+                                                        <button onclick="showExoplanetDetail('Kepler-186f')" class="hover:text-primary">
+                                                            Kepler-186f
+                                                        </button>
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">129.9</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">13.8</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">1.1</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200">Confirmed</span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
+                                                        <button onclick="showExoplanetDetail('Gliese 581g')" class="hover:text-primary">
+                                                            Gliese 581g
+                                                        </button>
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">36.6</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">10.2</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">1.5</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200">Candidate</span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
+                                                        <button onclick="showExoplanetDetail('HD 40307g')" class="hover:text-primary">
+                                                            HD 40307g
+                                                        </button>
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">197.8</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">15.5</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">1.2</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200">Confirmed</span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
+                                                        <button onclick="showExoplanetDetail('Kepler-452b')" class="hover:text-primary">
+                                                            Kepler-452b
+                                                        </button>
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">385.8</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">11.2</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">1.6</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200">Candidate</span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
+                                                        <button onclick="showExoplanetDetail('Tau Ceti e')" class="hover:text-primary">
+                                                            Tau Ceti e
+                                                        </button>
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">168.1</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">14.7</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">1.3</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200">Confirmed</span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Page -->
+            <div id="upload" class="page">
+                <div class="mx-auto max-w-4xl">
+                    <div class="mb-8">
+                        <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Upload and Configure Exoplanet Data</h1>
+                        <p class="mt-1 text-slate-600 dark:text-slate-400">Configure parameters for the AI/ML model and upload your exoplanet data for analysis.</p>
+                    </div>
+                    <div class="space-y-12">
+                        <div class="space-y-6 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Data Upload</h3>
+                            <div class="max-w-md">
+                                <label class="flex flex-col">
+                                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Upload Data File</span>
+                                    <div class="flex items-center justify-center w-full">
+                                        <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 dark:border-slate-700 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:hover:bg-slate-800/60 dark:bg-slate-800/40 hover:bg-slate-100" id="dropzone-label" for="dropzone-file">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <span class="material-symbols-outlined text-4xl text-slate-500 dark:text-slate-400"> cloud_upload </span>
+                                                <p class="mb-2 text-sm text-slate-500 dark:text-slate-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400">CSV, JSON, or other data formats</p>
+                                            </div>
+                                            <input class="hidden" id="dropzone-file" type="file"/>
+                                        </label>
+                                    </div>
+                                    <div id="upload-status" class="mt-2 text-sm"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="space-y-6 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Model Configuration</h3>
+                            <div class="max-w-md">
+                                <label class="flex flex-col">
+                                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Select Training Dataset</span>
+                                    <select class="form-select w-full rounded border-slate-300 dark:border-slate-700 bg-background-light dark:bg-background-dark text-slate-900 dark:text-white focus:border-primary focus:ring-primary">
+                                        <option>Kepler-22b Discovery Data</option>
+                                        <option>TRAPPIST-1 System Data</option>
+                                        <option>Proxima Centauri b Data</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="space-y-6 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Hyperparameter Tuning</h3>
+                            <div class="@container space-y-6">
+                                <div class="flex flex-col gap-2 @[320px]:flex-row @[320px]:items-center @[320px]:justify-between">
+                                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300" for="learning-rate">Learning Rate</label>
+                                    <span class="text-sm font-mono text-slate-600 dark:text-slate-400" id="learning-rate-value">0.005</span>
+                                </div>
+                                <div class="relative w-full">
+                                    <input class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary" id="learning-rate" max="0.1" min="0.001" step="0.001" type="range" value="0.005"/>
+                                </div>
+                                <div class="flex flex-col gap-2 @[320px]:flex-row @[320px]:items-center @[320px]:justify-between">
+                                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300" for="epochs">Number of Epochs</label>
+                                    <span class="text-sm font-mono text-slate-600 dark:text-slate-400" id="epochs-value">100</span>
+                                </div>
+                                <div class="relative w-full">
+                                    <input class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary" id="epochs" max="500" min="10" step="10" type="range" value="100"/>
+                                </div>
+                                <div class="max-w-md">
+                                    <label class="flex flex-col">
+                                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Batch Size</span>
+                                        <input class="form-input w-full rounded border-slate-300 dark:border-slate-700 bg-background-light dark:bg-background-dark text-slate-900 dark:text-white focus:border-primary focus:ring-primary" placeholder="e.g., 32" type="number" value="32"/>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-4">
+                            <button id="analyze-btn" class="flex items-center justify-center rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90">
+                                <span class="material-symbols-outlined mr-2">science</span> Train Model
+                            </button>
+                        </div>
+                        <div id="training-results" class="mt-6 hidden">
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Training Results</h3>
+                            <div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
+                                <div class="bg-white dark:bg-slate-900/70 overflow-hidden shadow rounded-lg">
+                                    <div class="p-5">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Accuracy</div>
+                                                <div class="mt-1 text-3xl font-semibold text-slate-900 dark:text-white" id="result-accuracy">-</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white dark:bg-slate-900/70 overflow-hidden shadow rounded-lg">
+                                    <div class="p-5">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Precision</div>
+                                                <div class="mt-1 text-3xl font-semibold text-slate-900 dark:text-white" id="result-precision">-</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white dark:bg-slate-900/70 overflow-hidden shadow rounded-lg">
+                                    <div class="p-5">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Recall</div>
+                                                <div class="mt-1 text-3xl font-semibold text-slate-900 dark:text-white" id="result-recall">-</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <p class="text-sm text-slate-600 dark:text-slate-400">
+                                    <span id="result-rows">-</span> rows processed using features: 
+                                    <span id="result-features" class="font-medium">-</span>
+                                </p>
+                                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                    Model loss: <span id="result-loss" class="font-medium">-</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exoplanets Detail Page -->
+            <div id="exoplanets" class="page">
+                <div class="layout-content-container flex flex-col max-w-5xl flex-1">
+                    <div class="flex flex-wrap justify-between gap-4 p-4 items-start">
+                        <div class="flex flex-col gap-2">
+                            <h1 class="text-3xl font-bold">Exoplanet Analysis Results</h1>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm max-w-lg">
+                                Analysis of exoplanet candidates from your uploaded data files.
+                            </p>
+                        </div>
+                        <button id="refresh-exoplanets" class="px-4 py-2 bg-primary text-white rounded text-sm font-medium hover:bg-primary/90">
+                            Refresh Data
+                        </button>
+                    </div>
+                    
+                    <!-- Statistics Summary -->
+                    <div class="p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-gray-50 dark:bg-background-dark rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Exoplanets</div>
+                                <div class="mt-1 text-2xl font-bold text-slate-900 dark:text-white" id="total-exoplanets">0</div>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-background-dark rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Candidates</div>
+                                <div class="mt-1 text-2xl font-bold text-slate-900 dark:text-white" id="total-candidates">0</div>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-background-dark rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">False Positives</div>
+                                <div class="mt-1 text-2xl font-bold text-slate-900 dark:text-white" id="total-false">0</div>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-background-dark rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Avg. Planet Radius</div>
+                                <div class="mt-1 text-2xl font-bold text-slate-900 dark:text-white" id="avg-radius">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Exoplanet List -->
+                    <div class="p-4">
+                        <h2 class="text-2xl font-bold mb-6">Top Exoplanets by Confidence</h2>
+                        
+                        <!-- Confirmed Exoplanets -->
+                        <div class="mb-8">
+                            <h3 class="text-xl font-bold mb-4 text-green-600 dark:text-green-400">Top 5 Confirmed Exoplanets</h3>
+                            <div id="confirmed-exoplanets" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                                <!-- Confirmed exoplanet cards will be dynamically inserted here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Candidate Exoplanets -->
+                        <div class="mb-8">
+                            <h3 class="text-xl font-bold mb-4 text-yellow-600 dark:text-yellow-400">Top 5 Candidate Exoplanets</h3>
+                            <div id="candidate-exoplanets" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                                <!-- Candidate exoplanet cards will be dynamically inserted here -->
+                            </div>
+                        </div>
+                        
+                        <!-- False Exoplanets -->
+                        <div class="mb-8">
+                            <h3 class="text-xl font-bold mb-4 text-red-600 dark:text-red-400">Top 5 False Exoplanets</h3>
+                            <div id="false-exoplanets" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                                <!-- False exoplanet cards will be dynamically inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Visualization Section -->
+                    <div class="p-4 mt-8">
+                        <h2 class="text-2xl font-bold mb-6">Data Visualizations</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Orbital Period Distribution -->
+                            <div class="bg-gray-50 dark:bg-background-dark rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+                                <h3 class="text-lg font-bold mb-4">Orbital Period Distribution</h3>
+                                <div class="h-64 flex items-end justify-between pt-4" id="period-chart">
+                                    <!-- Chart will be dynamically generated -->
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                                    Distribution of exoplanets by orbital period (days).
+                                </p>
+                            </div>
+                            
+                            <!-- Planet Radius Distribution -->
+                            <div class="bg-gray-50 dark:bg-background-dark rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+                                <h3 class="text-lg font-bold mb-4">Planet Radius Distribution</h3>
+                                <div class="h-64 flex items-end justify-between pt-4" id="radius-chart">
+                                    <!-- Chart will be dynamically generated -->
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                                    Distribution of exoplanets by radius relative to Earth.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Page navigation
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show the selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // If showing exoplanets page, load data
+            if (pageId === 'exoplanets') {
+                loadExoplanetData();
+            }
+        }
+        
+        // Load exoplanet data from server
+        function loadExoplanetData() {
+            fetch('/get_exoplanet_data')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update statistics
+                    const totalExoplanetsEl = document.getElementById('total-exoplanets');
+                    const totalCandidatesEl = document.getElementById('total-candidates');
+                    const totalFalseEl = document.getElementById('total-false');
+                    const avgPeriodEl = document.getElementById('avg-period');
+                    const avgRadiusEl = document.getElementById('avg-radius');
+                    
+                    if (totalExoplanetsEl) totalExoplanetsEl.textContent = data.statistics.total_exoplanets || 0;
+                    if (totalCandidatesEl) totalCandidatesEl.textContent = data.statistics.total_candidates || 0;
+                    if (totalFalseEl) totalFalseEl.textContent = data.statistics.total_false || 0;
+                    if (avgPeriodEl) avgPeriodEl.textContent = (data.statistics.avg_orbital_period || 0) + ' days';
+                    if (avgRadiusEl) avgRadiusEl.textContent = (data.statistics.avg_planet_radius || 0) + ' R⊕';
+                    
+                    // Clear existing exoplanet cards
+                    const confirmedGrid = document.getElementById('confirmed-exoplanets');
+                    const candidateGrid = document.getElementById('candidate-exoplanets');
+                    const falseGrid = document.getElementById('false-exoplanets');
+                    
+                    if (confirmedGrid) confirmedGrid.innerHTML = '';
+                    if (candidateGrid) candidateGrid.innerHTML = '';
+                    if (falseGrid) falseGrid.innerHTML = '';
+                    
+                    // Separate exoplanets by status (assuming the first 5 are confirmed, next 5 are candidates, last 5 are false)
+                    const confirmed_exoplanets = data.exoplanet_data.slice(0, 5);
+                    const candidate_exoplanets = data.exoplanet_data.slice(5, 10);
+                    const false_exoplanets = data.exoplanet_data.slice(10, 15);
+                    
+                    // Create confirmed exoplanet cards
+                    if (confirmedGrid) {
+                        confirmed_exoplanets.forEach(planet => {
+                            const card = document.createElement('div');
+                            card.className = 'bg-gray-50 dark:bg-background-dark rounded-lg p-4 border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-shadow';
+                            card.innerHTML = `
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-md font-bold mb-2">${planet.name}</h3>
+                                    <span class="px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200">${planet.status}</span>
+                                </div>
+                                <div class="space-y-2 text-sm mt-3">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500 dark:text-gray-400">Period</span>
+                                        <span class="font-medium">${planet.orbital_period}d</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500 dark:text-gray-400">Radius</span>
+                                        <span class="font-medium">${planet.radius} R⊕</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-gray-500 dark:text-gray-400">Confidence</span>
+                                        <span class="text-xs font-bold text-primary">${planet.confidence}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
+                                        <div class="bg-primary h-1.5 rounded-full" style="width: ${planet.confidence}%"></div>
+                                    </div>
+                                </div>
+                            `;
+                            confirmedGrid.appendChild(card);
+                        });
+                    }
+                    
+                    // Create candidate exoplanet cards
+                    if (candidateGrid) {
+                        candidate_exoplanets.forEach(planet => {
+                            const card = document.createElement('div');
+                            card.className = 'bg-gray-50 dark:bg-background-dark rounded-lg p-4 border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-shadow';
+                            card.innerHTML = `
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-md font-bold mb-2">${planet.name}</h3>
+                                    <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200">${planet.status}</span>
+                                </div>
+                                <div class="space-y-2 text-sm mt-3">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500 dark:text-gray-400">Period</span>
+                                        <span class="font-medium">${planet.orbital_period}d</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500 dark:text-gray-400">Radius</span>
+                                        <span class="font-medium">${planet.radius} R⊕</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-gray-500 dark:text-gray-400">Confidence</span>
+                                        <span class="text-xs font-bold text-primary">${planet.confidence}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
+                                        <div class="bg-primary h-1.5 rounded-full" style="width: ${planet.confidence}%"></div>
+                                    </div>
+                                </div>
+                            `;
+                            candidateGrid.appendChild(card);
+                        });
+                    }
+                    
+                    // Create false exoplanet cards
+                    if (falseGrid) {
+                        false_exoplanets.forEach(planet => {
+                            const card = document.createElement('div');
+                            card.className = 'bg-gray-50 dark:bg-background-dark rounded-lg p-4 border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-shadow';
+                            card.innerHTML = `
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-md font-bold mb-2">${planet.name}</h3>
+                                    <span class="px-2 py-1 text-xs rounded-full bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200">${planet.status}</span>
+                                </div>
+                                <div class="space-y-2 text-sm mt-3">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500 dark:text-gray-400">Period</span>
+                                        <span class="font-medium">${planet.orbital_period}d</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500 dark:text-gray-400">Radius</span>
+                                        <span class="font-medium">${planet.radius} R⊕</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-gray-500 dark:text-gray-400">Confidence</span>
+                                        <span class="text-xs font-bold text-primary">${planet.confidence}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
+                                        <div class="bg-primary h-1.5 rounded-full" style="width: ${planet.confidence}%"></div>
+                                    </div>
+                                </div>
+                            `;
+                            falseGrid.appendChild(card);
+                        });
+                    }
+                    
+                    // Generate charts with all data
+                    generateCharts(data.all_data || data.exoplanet_data);
+                } else {
+                    alert('Error loading exoplanet data: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading exoplanet data:', error);
+                alert('Error loading exoplanet data: ' + error.message);
+            });
+        }
+        
+        // Generate charts from exoplanet data
+        function generateCharts(exoplanetData) {
+            // Clear existing charts
+            document.getElementById('period-chart').innerHTML = '';
+            document.getElementById('radius-chart').innerHTML = '';
+            
+            // Group data for period chart (log scale bins)
+            const periodGroups = {
+                '<1': 0, '1-10': 0, '10-100': 0, '100-1000': 0, '>1000': 0
+            };
+            
+            // Group data for radius chart
+            const radiusGroups = {
+                '<1': 0, '1-2': 0, '2-4': 0, '4-8': 0, '>8': 0
+            };
+            
+            // Process all exoplanet data for charts
+            exoplanetData.forEach(planet => {
+                // Period grouping
+                const period = parseFloat(planet.orbital_period);
+                if (!isNaN(period)) {
+                    if (period < 1) periodGroups['<1']++;
+                    else if (period < 10) periodGroups['1-10']++;
+                    else if (period < 100) periodGroups['10-100']++;
+                    else if (period < 1000) periodGroups['100-1000']++;
+                    else periodGroups['>1000']++;
+                }
+                
+                // Radius grouping
+                const radius = parseFloat(planet.radius);
+                if (!isNaN(radius)) {
+                    if (radius < 1) radiusGroups['<1']++;
+                    else if (radius < 2) radiusGroups['1-2']++;
+                    else if (radius < 4) radiusGroups['2-4']++;
+                    else if (radius < 8) radiusGroups['4-8']++;
+                    else radiusGroups['>8']++;
+                }
+            });
+            
+            // Generate period chart
+            const periodChart = document.getElementById('period-chart');
+            Object.entries(periodGroups).forEach(([label, count]) => {
+                const barContainer = document.createElement('div');
+                barContainer.className = 'flex flex-col items-center flex-1 px-1';
+                
+                const bar = document.createElement('div');
+                bar.className = 'w-full bg-primary rounded-t';
+                // Scale height based on count (max height 100%)
+                const maxHeight = Math.max(...Object.values(periodGroups));
+                const height = maxHeight > 0 ? (count / maxHeight) * 100 : 0;
+                bar.style.height = `${Math.max(height, 5)}%`;
+                
+                const labelEl = document.createElement('span');
+                labelEl.className = 'mt-2 text-xs text-gray-500 dark:text-gray-400';
+                labelEl.textContent = label;
+                
+                barContainer.appendChild(bar);
+                barContainer.appendChild(labelEl);
+                periodChart.appendChild(barContainer);
+            });
+            
+            // Generate radius chart
+            const radiusChart = document.getElementById('radius-chart');
+            Object.entries(radiusGroups).forEach(([label, count]) => {
+                const barContainer = document.createElement('div');
+                barContainer.className = 'flex flex-col items-center flex-1 px-1';
+                
+                const bar = document.createElement('div');
+                bar.className = 'w-full bg-primary rounded-t';
+                // Scale height based on count (max height 100%)
+                const maxHeight = Math.max(...Object.values(radiusGroups));
+                const height = maxHeight > 0 ? (count / maxHeight) * 100 : 0;
+                bar.style.height = `${Math.max(height, 5)}%`;
+                
+                const labelEl = document.createElement('span');
+                labelEl.className = 'mt-2 text-xs text-gray-500 dark:text-gray-400';
+                labelEl.textContent = label;
+                
+                barContainer.appendChild(bar);
+                barContainer.appendChild(labelEl);
+                radiusChart.appendChild(barContainer);
+            });
+        }
+        
+        // Show exoplanet detail
+        function showExoplanetDetail(name) {
+            // Update the exoplanet detail page with the selected exoplanet data
+            document.getElementById('exoplanet-name').textContent = `Exoplanet Details: ${name}`;
+            
+            // In a real app, you would fetch the data for the specific exoplanet
+            // For now, we'll just show the detail page
+            showPage('exoplanets');
+        }
+        
+        // Update displayed values for sliders
+        document.getElementById('learning-rate').addEventListener('input', function() {
+            document.getElementById('learning-rate-value').textContent = this.value;
+        });
+        
+        document.getElementById('epochs').addEventListener('input', function() {
+            document.getElementById('epochs-value').textContent = this.value;
+        });
+        
+        // Handle file upload
+        const fileInput = document.getElementById('dropzone-file');
+        const dropzoneLabel = document.getElementById('dropzone-label');
+        const uploadStatus = document.getElementById('upload-status');
+        
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                uploadStatus.textContent = `Selected: ${file.name}`;
+                uploadStatus.className = 'mt-2 text-sm text-green-600 dark:text-green-400';
+                
+                // Upload file to server
+                uploadFile(file);
+            }
+        });
+        
+        // Drag and drop functionality
+        dropzoneLabel.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('border-primary');
+        });
+        
+        dropzoneLabel.addEventListener('dragleave', function() {
+            this.classList.remove('border-primary');
+        });
+        
+        dropzoneLabel.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('border-primary');
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                const file = e.dataTransfer.files[0];
+                uploadStatus.textContent = `Selected: ${file.name}`;
+                uploadStatus.className = 'mt-2 text-sm text-green-600 dark:text-green-400';
+                
+                // Upload file to server
+                uploadFile(file);
+            }
+        });
+        
+        // Function to upload file to server
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            fetch('/upload_file', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    uploadStatus.textContent = data.message;
+                    uploadStatus.className = 'mt-2 text-sm text-green-600 dark:text-green-400';
+                } else {
+                    uploadStatus.textContent = 'Upload failed: ' + data.message;
+                    uploadStatus.className = 'mt-2 text-sm text-red-600 dark:text-red-400';
+                }
+            })
+            .catch(error => {
+                uploadStatus.textContent = 'Upload failed: ' + error.message;
+                uploadStatus.className = 'mt-2 text-sm text-red-600 dark:text-red-400';
+            });
+        }
+        
+        // Handle analyze button click
+        document.getElementById('analyze-btn').addEventListener('click', function() {
+            // Get form values
+            const learningRate = document.getElementById('learning-rate').value;
+            const epochs = document.getElementById('epochs').value;
+            const batchSize = document.querySelector('input[type="number"]').value;
+            
+            // Show processing message
+            const originalText = this.innerHTML;
+            this.innerHTML = '<span class="material-symbols-outlined mr-2">autorenew</span> Training...';
+            this.disabled = true;
+            
+            // Prepare data for analysis
+            const requestData = {
+                learning_rate: learningRate,
+                epochs: epochs,
+                batch_size: batchSize
+            };
+            
+            // Send request to train model
+            fetch('/train_model', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Restore button
+                document.getElementById('analyze-btn').innerHTML = originalText;
+                document.getElementById('analyze-btn').disabled = false;
+                
+                if (data.status === 'success') {
+                    // Update results in the same tab
+                    document.getElementById('result-accuracy').textContent = data.results.accuracy;
+                    document.getElementById('result-precision').textContent = data.results.precision;
+                    document.getElementById('result-recall').textContent = data.results.recall;
+                    document.getElementById('result-loss').textContent = data.results.loss;
+                    document.getElementById('result-rows').textContent = data.results.total_rows;
+                    document.getElementById('result-features').textContent = data.results.feature_columns.join(', ');
+                    
+                    // Show results section
+                    document.getElementById('training-results').classList.remove('hidden');
+                } else {
+                    alert('Training failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                // Restore button
+                document.getElementById('analyze-btn').innerHTML = originalText;
+                document.getElementById('analyze-btn').disabled = false;
+                alert('Training failed: ' + error.message);
+            });
+        });
+        
+        // Handle refresh button click
+        document.getElementById('refresh-exoplanets').addEventListener('click', function() {
+            loadExoplanetData();
+        });
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            showPage('dashboard');
+        });
+    </script>
+</body>
+</html>
