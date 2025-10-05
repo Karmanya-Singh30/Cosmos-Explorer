@@ -414,7 +414,7 @@
                             <!-- Orbital Period Distribution -->
                             <div class="bg-gray-50 dark:bg-background-dark rounded-lg p-6 border border-gray-200 dark:border-gray-800">
                                 <h3 class="text-lg font-bold mb-4">Orbital Period Distribution</h3>
-                                <div class="h-64 flex items-end justify-between pt-4" id="period-chart">
+                                <div class="h-64" id="period-chart">
                                     <!-- Chart will be dynamically generated -->
                                 </div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
@@ -425,11 +425,47 @@
                             <!-- Planet Radius Distribution -->
                             <div class="bg-gray-50 dark:bg-background-dark rounded-lg p-6 border border-gray-200 dark:border-gray-800">
                                 <h3 class="text-lg font-bold mb-4">Planet Radius Distribution</h3>
-                                <div class="h-64 flex items-end justify-between pt-4" id="radius-chart">
+                                <div class="h-64" id="radius-chart">
                                     <!-- Chart will be dynamically generated -->
                                 </div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
                                     Distribution of exoplanets by radius relative to Earth.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Visualizations -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                            <!-- Status Distribution -->
+                            <div class="bg-gray-50 dark:bg-background-dark rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+                                <h3 class="text-lg font-bold mb-4">Exoplanet Status Distribution</h3>
+                                <div class="h-64 flex items-center justify-center" id="status-chart">
+                                    <!-- Chart will be dynamically generated -->
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                                    Distribution of exoplanets by confirmation status.
+                                </p>
+                            </div>
+                            
+                            <!-- Stellar Effective Temperature -->
+                            <div class="bg-gray-50 dark:bg-background-dark rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+                                <h3 class="text-lg font-bold mb-4">Stellar Effective Temperature</h3>
+                                <div class="h-64" id="teff-chart">
+                                    <!-- Chart will be dynamically generated -->
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                                    Distribution of host stars by effective temperature (K).
+                                </p>
+                            </div>
+                            
+                            <!-- Confidence Score Distribution -->
+                            <div class="bg-gray-50 dark:bg-background-dark rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+                                <h3 class="text-lg font-bold mb-4">Model Confidence Distribution</h3>
+                                <div class="h-64" id="confidence-chart">
+                                    <!-- Chart will be dynamically generated -->
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                                    Distribution of model confidence scores for predictions.
                                 </p>
                             </div>
                         </div>
@@ -461,6 +497,7 @@
             fetch('/get_exoplanet_data')
             .then(response => response.json())
             .then(data => {
+                console.log('Full data response:', data);
                 if (data.status === 'success') {
                     // Update statistics
                     const totalExoplanetsEl = document.getElementById('total-exoplanets');
@@ -592,8 +629,10 @@
                     }
                     
                     // Generate charts with all data
+                    console.log('Generating charts with all data:', data.all_data || data.exoplanet_data);
                     generateCharts(data.all_data || data.exoplanet_data);
                 } else {
+                    console.error('Error loading exoplanet data:', data.message);
                     alert('Error loading exoplanet data: ' + data.message);
                 }
             })
@@ -605,9 +644,38 @@
         
         // Generate charts from exoplanet data
         function generateCharts(exoplanetData) {
-            // Clear existing charts
-            document.getElementById('period-chart').innerHTML = '';
-            document.getElementById('radius-chart').innerHTML = '';
+            console.log('Generating charts with data:', exoplanetData);
+            
+            // Get chart containers
+            const periodChart = document.getElementById('period-chart');
+            const radiusChart = document.getElementById('radius-chart');
+            const statusChart = document.getElementById('status-chart');
+            const teffChart = document.getElementById('teff-chart');
+            const confidenceChart = document.getElementById('confidence-chart');
+            
+            // Check if chart containers exist
+            if (!periodChart || !radiusChart || !statusChart || !teffChart || !confidenceChart) {
+                console.error('One or more chart containers not found');
+                return;
+            }
+            
+            // Clear all charts
+            periodChart.innerHTML = '';
+            radiusChart.innerHTML = '';
+            statusChart.innerHTML = '';
+            teffChart.innerHTML = '';
+            confidenceChart.innerHTML = '';
+            
+            // If no data, show a message
+            if (!exoplanetData || exoplanetData.length === 0) {
+                const noDataMessage = '<div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">No data available. Upload data files to see visualizations.</div>';
+                periodChart.innerHTML = noDataMessage;
+                radiusChart.innerHTML = noDataMessage;
+                statusChart.innerHTML = noDataMessage;
+                teffChart.innerHTML = noDataMessage;
+                confidenceChart.innerHTML = noDataMessage;
+                return;
+            }
             
             // Group data for period chart (log scale bins)
             const periodGroups = {
@@ -617,6 +685,23 @@
             // Group data for radius chart
             const radiusGroups = {
                 '<1': 0, '1-2': 0, '2-4': 0, '4-8': 0, '>8': 0
+            };
+            
+            // Group data for stellar effective temperature
+            const teffGroups = {
+                '<3500': 0, '3500-4500': 0, '4500-5500': 0, '5500-6500': 0, '>6500': 0
+            };
+            
+            // Group data for confidence scores
+            const confidenceGroups = {
+                '0-20': 0, '20-40': 0, '40-60': 0, '60-80': 0, '80-100': 0
+            };
+            
+            // Count statuses
+            const statusCounts = {
+                'Confirmed': 0,
+                'Candidate': 0,
+                'False Positive': 0
             };
             
             // Process all exoplanet data for charts
@@ -640,51 +725,193 @@
                     else if (radius < 8) radiusGroups['4-8']++;
                     else radiusGroups['>8']++;
                 }
+                
+                // Stellar effective temperature grouping
+                const teff = parseFloat(planet.star_teff);
+                if (!isNaN(teff)) {
+                    if (teff < 3500) teffGroups['<3500']++;
+                    else if (teff < 4500) teffGroups['3500-4500']++;
+                    else if (teff < 5500) teffGroups['4500-5500']++;
+                    else if (teff < 6500) teffGroups['5500-6500']++;
+                    else teffGroups['>6500']++;
+                }
+                
+                // Confidence score grouping
+                const confidence = parseFloat(planet.confidence);
+                if (!isNaN(confidence)) {
+                    if (confidence < 20) confidenceGroups['0-20']++;
+                    else if (confidence < 40) confidenceGroups['20-40']++;
+                    else if (confidence < 60) confidenceGroups['40-60']++;
+                    else if (confidence < 80) confidenceGroups['60-80']++;
+                    else confidenceGroups['80-100']++;
+                }
+                
+                // Status counting
+                if (statusCounts.hasOwnProperty(planet.status)) {
+                    statusCounts[planet.status]++;
+                }
             });
             
-            // Generate period chart
-            const periodChart = document.getElementById('period-chart');
-            Object.entries(periodGroups).forEach(([label, count]) => {
+            // Generate all charts
+            generateBarChart(periodChart, periodGroups, 'Period (days)');
+            generateBarChart(radiusChart, radiusGroups, 'Radius (Earth radii)');
+            generateBarChart(teffChart, teffGroups, 'Temperature (K)');
+            generateBarChart(confidenceChart, confidenceGroups, 'Confidence (%)');
+            generatePieChart(statusChart, statusCounts);
+        }
+        
+        // Helper function to generate bar charts
+        function generateBarChart(container, dataGroups, xAxisLabel) {
+            // Clear container
+            container.innerHTML = '';
+            
+            // Check if all groups are zero
+            const hasData = Object.values(dataGroups).some(count => count > 0);
+            
+            if (!hasData) {
+                container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">No data available for this chart</div>';
+                return;
+            }
+            
+            // Find the maximum count for scaling
+            const maxValue = Math.max(...Object.values(dataGroups));
+            
+            // Create flex container for bars
+            const chartContainer = document.createElement('div');
+            chartContainer.className = 'flex items-end justify-between h-5/6 pt-4';
+            
+            // Generate bars
+            Object.entries(dataGroups).forEach(([label, count]) => {
+                // Calculate height percentage (minimum 5% for visibility)
+                const heightPercentage = maxValue > 0 ? Math.max((count / maxValue) * 80, 5) : 0;
+                
+                // Bar container
                 const barContainer = document.createElement('div');
                 barContainer.className = 'flex flex-col items-center flex-1 px-1';
                 
+                // Bar element
                 const bar = document.createElement('div');
                 bar.className = 'w-full bg-primary rounded-t';
-                // Scale height based on count (max height 100%)
-                const maxHeight = Math.max(...Object.values(periodGroups));
-                const height = maxHeight > 0 ? (count / maxHeight) * 100 : 0;
-                bar.style.height = `${Math.max(height, 5)}%`;
+                bar.style.height = `${heightPercentage}%`;
                 
-                const labelEl = document.createElement('span');
-                labelEl.className = 'mt-2 text-xs text-gray-500 dark:text-gray-400';
+                // Count label
+                const countLabel = document.createElement('div');
+                countLabel.className = 'text-xs text-gray-700 dark:text-gray-300 mt-2';
+                countLabel.textContent = count;
+                
+                // Category label
+                const labelEl = document.createElement('div');
+                labelEl.className = 'text-xs text-gray-500 dark:text-gray-400 mt-1 text-center';
                 labelEl.textContent = label;
+                labelEl.style.wordBreak = 'break-word';
+                labelEl.style.maxWidth = '100%';
                 
+                barContainer.appendChild(countLabel);
                 barContainer.appendChild(bar);
                 barContainer.appendChild(labelEl);
-                periodChart.appendChild(barContainer);
+                chartContainer.appendChild(barContainer);
             });
             
-            // Generate radius chart
-            const radiusChart = document.getElementById('radius-chart');
-            Object.entries(radiusGroups).forEach(([label, count]) => {
-                const barContainer = document.createElement('div');
-                barContainer.className = 'flex flex-col items-center flex-1 px-1';
+            container.appendChild(chartContainer);
+        }
+        
+        // Helper function to generate pie charts
+        function generatePieChart(container, dataCounts) {
+            // Clear container
+            container.innerHTML = '';
+            
+            // Check if all counts are zero
+            const hasData = Object.values(dataCounts).some(count => count > 0);
+            
+            if (!hasData) {
+                container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">No data available for this chart</div>';
+                return;
+            }
+            
+            // Calculate total for percentages
+            const total = Object.values(dataCounts).reduce((sum, count) => sum + count, 0);
+            
+            // Create SVG container
+            const svgContainer = document.createElement('div');
+            svgContainer.className = 'relative w-48 h-48';
+            
+            // Create pie chart using SVG
+            const size = 180;
+            const radius = size / 2;
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', size);
+            svg.setAttribute('height', size);
+            svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+            svg.className = 'mx-auto';
+            
+            let startAngle = 0;
+            
+            // Colors for each status
+            const colors = {
+                'Confirmed': '#10B981',      // green
+                'Candidate': '#F59E0B',      // amber
+                'False Positive': '#EF4444'  // red
+            };
+            
+            // Draw each segment
+            Object.entries(dataCounts).forEach(([status, count]) => {
+                if (count === 0) return;
                 
-                const bar = document.createElement('div');
-                bar.className = 'w-full bg-primary rounded-t';
-                // Scale height based on count (max height 100%)
-                const maxHeight = Math.max(...Object.values(radiusGroups));
-                const height = maxHeight > 0 ? (count / maxHeight) * 100 : 0;
-                bar.style.height = `${Math.max(height, 5)}%`;
+                const percentage = (count / total) * 100;
+                const angle = (percentage / 100) * 360;
+                const endAngle = startAngle + angle;
                 
-                const labelEl = document.createElement('span');
-                labelEl.className = 'mt-2 text-xs text-gray-500 dark:text-gray-400';
-                labelEl.textContent = label;
+                // Convert angles to radians
+                const startRad = (startAngle - 90) * Math.PI / 180;
+                const endRad = (endAngle - 90) * Math.PI / 180;
                 
-                barContainer.appendChild(bar);
-                barContainer.appendChild(labelEl);
-                radiusChart.appendChild(barContainer);
+                // Calculate coordinates
+                const x1 = radius + radius * Math.cos(startRad);
+                const y1 = radius + radius * Math.sin(startRad);
+                const x2 = radius + radius * Math.cos(endRad);
+                const y2 = radius + radius * Math.sin(endRad);
+                
+                // Create path for the segment
+                const largeArcFlag = angle > 180 ? 1 : 0;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M ${radius} ${radius} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`);
+                path.setAttribute('fill', colors[status]);
+                
+                svg.appendChild(path);
+                
+                // Update start angle for next segment
+                startAngle = endAngle;
             });
+            
+            svgContainer.appendChild(svg);
+            container.appendChild(svgContainer);
+            
+            // Add legend
+            const legend = document.createElement('div');
+            legend.className = 'mt-4 flex flex-wrap justify-center gap-3';
+            
+            Object.entries(dataCounts).forEach(([status, count]) => {
+                if (count === 0) return;
+                
+                const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                
+                const legendItem = document.createElement('div');
+                legendItem.className = 'flex items-center';
+                
+                const colorBox = document.createElement('div');
+                colorBox.className = 'w-3 h-3 rounded-sm mr-2';
+                colorBox.style.backgroundColor = colors[status];
+                
+                const text = document.createElement('span');
+                text.className = 'text-xs text-gray-700 dark:text-gray-300';
+                text.textContent = `${status}: ${count} (${percentage}%)`;
+                
+                legendItem.appendChild(colorBox);
+                legendItem.appendChild(text);
+                legend.appendChild(legendItem);
+            });
+            
+            container.appendChild(legend);
         }
         
         // Show exoplanet detail
@@ -761,6 +988,17 @@
                 if (data.status === 'success') {
                     uploadStatus.textContent = data.message;
                     uploadStatus.className = 'mt-2 text-sm text-green-600 dark:text-green-400';
+                    
+                    // Automatically refresh exoplanet data if we're on that page
+                    if (document.getElementById('exoplanets').classList.contains('active')) {
+                        setTimeout(loadExoplanetData, 1000); // Small delay to ensure file processing
+                    }
+                    
+                    // Also refresh dashboard stats if on dashboard
+                    if (document.getElementById('dashboard').classList.contains('active')) {
+                        // Update any dashboard stats that might be affected
+                        console.log('File uploaded successfully. Dashboard will update on next navigation to Exoplanets page.');
+                    }
                 } else {
                     uploadStatus.textContent = 'Upload failed: ' + data.message;
                     uploadStatus.className = 'mt-2 text-sm text-red-600 dark:text-red-400';
@@ -816,6 +1054,11 @@
                     
                     // Show results section
                     document.getElementById('training-results').classList.remove('hidden');
+                    
+                    // If we're on the exoplanets page, refresh the data to show updated predictions
+                    if (document.getElementById('exoplanets').classList.contains('active')) {
+                        setTimeout(loadExoplanetData, 500); // Small delay to ensure model saving
+                    }
                 } else {
                     alert('Training failed: ' + data.message);
                 }
@@ -832,6 +1075,22 @@
         document.getElementById('refresh-exoplanets').addEventListener('click', function() {
             loadExoplanetData();
         });
+        
+        // Auto-refresh when navigating to exoplanets page
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show the selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // If showing exoplanets page, load data
+            if (pageId === 'exoplanets') {
+                loadExoplanetData();
+            }
+        }
         
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {

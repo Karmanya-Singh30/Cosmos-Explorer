@@ -201,12 +201,12 @@ def get_exoplanet_data():
             all_exoplanet_data.append({
                 'name': f"KOI-{i+1:04d}" if 'koi' in str(row.get('disposition', '')).lower() else f"TOI-{i+1:04d}",
                 'status': status,
-                'orbital_period': round(row.get('period', 0), 2) if not pd.isna(row.get('period', 0)) else 0,
-                'radius': round(row.get('planet_radius', 0), 2) if not pd.isna(row.get('planet_radius', 0)) else 0,
-                'star_teff': round(row.get('star_teff', 0), 2) if not pd.isna(row.get('star_teff', 0)) else 0,
-                'star_radius': round(row.get('star_radius', 0), 2) if not pd.isna(row.get('star_radius', 0)) else 0,
-                'impact': round(row.get('impact', 0), 2) if not pd.isna(row.get('impact', 0)) else 0,
-                'confidence': round(prediction_probabilities[i] * 100, 1) if i < len(prediction_probabilities) else 50
+                'orbital_period': float(round(row.get('period', 0), 2)) if not pd.isna(row.get('period', 0)) else 0,
+                'radius': float(round(row.get('planet_radius', 0), 2)) if not pd.isna(row.get('planet_radius', 0)) else 0,
+                'star_teff': float(round(row.get('star_teff', 0), 2)) if not pd.isna(row.get('star_teff', 0)) else 0,
+                'star_radius': float(round(row.get('star_radius', 0), 2)) if not pd.isna(row.get('star_radius', 0)) else 0,
+                'impact': float(round(row.get('impact', 0), 2)) if not pd.isna(row.get('impact', 0)) else 0,
+                'confidence': float(round(prediction_probabilities[i] * 100, 1)) if i < len(prediction_probabilities) else 50
             })
         
         # Sort by confidence level
@@ -230,9 +230,13 @@ def get_exoplanet_data():
             'total_exoplanets': len([p for p in all_exoplanet_data if p['status'] == 'Confirmed']),
             'total_candidates': len([p for p in all_exoplanet_data if p['status'] == 'Candidate']),
             'total_false': len([p for p in all_exoplanet_data if p['status'] == 'False Positive']),
-            'avg_orbital_period': round(combined_df['period'].mean(), 2) if 'period' in combined_df.columns else 0,
-            'avg_planet_radius': round(combined_df['planet_radius'].mean(), 2) if 'planet_radius' in combined_df.columns else 0
+            'avg_orbital_period': float(round(combined_df['period'].mean(), 2)) if 'period' in combined_df.columns else 0,
+            'avg_planet_radius': float(round(combined_df['planet_radius'].mean(), 2)) if 'planet_radius' in combined_df.columns else 0
         }
+        
+        # Debug: Print data info
+        print(f"Total exoplanet data entries: {len(all_exoplanet_data)}")
+        print(f"Sample data entry: {all_exoplanet_data[0] if all_exoplanet_data else 'No data'}")
         
         return jsonify({
             'status': 'success',
@@ -242,6 +246,9 @@ def get_exoplanet_data():
         }), 200
         
     except Exception as e:
+        print(f"Error in get_exoplanet_data: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
