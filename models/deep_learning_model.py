@@ -4,8 +4,8 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, precision_score, recall_score
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
@@ -100,7 +100,7 @@ class ExoplanetDeepLearningModel:
             print(f"Warning: Missing feature columns: {missing_features}")
             print(f"Using available features: {available_features}")
             
-            # If we don't have enough features, return empty
+            # If we don't have enough features, we need to adjust our feature columns
             if len(available_features) < 3:
                 print("Error: Not enough feature columns available for training")
                 return pd.DataFrame(), pd.Series()
@@ -150,64 +150,110 @@ class ExoplanetDeepLearningModel:
     def train(self, X, y, epochs=100, batch_size=64, validation_split=0.3):
         """Train the deep learning model"""
         # Check if we have data
-        if X.empty or y.empty:
-            raise ValueError("No data available for training")
+        if X is None or y is None or X.empty or y.empty:
+            print("❌ Error: No data available for training")
+            return None, None, None, None
+
+        print("\n=== TRAINING DEBUG INFO ===")
+        print("X type:", type(X))
+        print("y type:", type(y))
+        try:
+            print("X shape:", X.shape)
+            print("y shape:", y.shape)
+        except Exception as e:
+            print("Shape error:", e)
+
+        # Show sample rows for debugging
+        print("First few rows of X:\n", X.head(3))
+        print("First few y values:", y.head(10).tolist())
+        print("=============================\n")
+
+        try:
+            # Ensure we have enough data for training
+            if len(X) < 10:
+                print("❌ Error: Not enough data for training. Need at least 10 samples, got", len(X))
+                return None, None, None, None
+
+            # Check for class imbalance
+            unique_classes, class_counts = np.unique(y, return_counts=True)
+            print("Class distribution:", dict(zip(unique_classes, class_counts)))
             
-        # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
-        )
-        
-        # Scale features
-        X_train_scaled = self.scaler.fit_transform(X_train)
-        X_test_scaled = self.scaler.transform(X_test)
-        
-        # Build model
-        self.model = self.build_model(X_train_scaled.shape[1])
-        
-        print("Model Architecture:")
-        self.model.summary()
-        
-        # Train model
-        print("\n--- Starting Model Training ---")
-        history = self.model.fit(
-            X_train_scaled,
-            y_train,
-            epochs=epochs,
-            batch_size=batch_size,
-            validation_split=validation_split,
-            verbose=1
-        )
-        
-        print("--- Training Complete ---")
-        
-        # Evaluate model
-        loss, accuracy = self.model.evaluate(X_test_scaled, y_test, verbose=0)
-        print(f"\nTest Loss: {loss:.4f}")
-        print(f"Test Accuracy: {accuracy:.4f}")
-        
-        # Make predictions
-        y_pred_proba = self.model.predict(X_test_scaled)
-        y_pred = (y_pred_proba > 0.5).astype(int)
-        
-        # Calculate metrics
-        accuracy = accuracy_score(y_test, y_pred)
-        precision = precision_score(y_test, y_pred, zero_division=0)
-        recall = recall_score(y_test, y_pred, zero_division=0)
-        
-        # Store results
-        self.training_results = {
-            'accuracy': round(accuracy, 4),
-            'precision': round(precision, 4),
-            'recall': round(recall, 4),
-            'loss': round(loss, 4)
-        }
-        
-        # Print classification report
-        print("\n--- Classification Report ---")
-        print(classification_report(y_test, y_pred, target_names=['Not Exoplanet (0)', 'Exoplanet (1)']))
-        
-        return history, X_test_scaled, y_test, y_pred
+            if len(unique_classes) < 2:
+                print("❌ Error: Need at least 2 classes for training. Found only:", unique_classes)
+                return None, None, None, None
+
+            # Split data with stratification only if we have enough samples per class
+            min_class_count = min(class_counts)
+            if min_class_count < 2:
+                print("⚠️  Warning: Not enough samples in minority class for stratified split. Using random split.")
+                X_train, X_test, y_train, y_test = train_test_split(
+                    X, y, test_size=0.2, random_state=42
+                )
+            else:
+                try:
+                    X_train, X_test, y_train, y_test = train_test_split(
+                        X, y, test_size=0.2, random_state=42, stratify=y
+                    )
+                except ValueError as e:
+                    print("⚠️  Warning: Could not stratify split. Using random split.")
+                    X_train, X_test, y_train, y_test = train_test_split(
+                        X, y, test_size=0.2, random_state=42
+                    )
+
+            # Scale features
+            X_train_scaled = self.scaler.fit_transform(X_train)
+            X_test_scaled = self.scaler.transform(X_test)
+
+            # Build model
+            self.model = self.build_model(X_train_scaled.shape[1])
+
+            print("✅ Model Architecture:")
+            self.model.summary()
+
+            # Train model safely
+            print("\n🚀 Starting Model Training...")
+            history = self.model.fit(
+                X_train_scaled,
+                y_train,
+                epochs=epochs,
+                batch_size=batch_size,
+                validation_split=validation_split,
+                verbose=1
+            )
+            print("✅ Training Complete")
+
+            # Evaluate model
+            loss, accuracy = self.model.evaluate(X_test_scaled, y_test, verbose=0)
+            print(f"\n📊 Test Loss: {loss:.4f}")
+            print(f"📈 Test Accuracy: {accuracy:.4f}")
+
+            # Predictions
+            y_pred_proba = self.model.predict(X_test_scaled)
+            y_pred = (y_pred_proba > 0.5).astype(int)
+
+            # Calculate metrics
+            accuracy = accuracy_score(y_test, y_pred)
+            precision = precision_score(y_test, y_pred, zero_division=0)
+            recall = recall_score(y_test, y_pred, zero_division=0)
+
+            # Store results
+            self.training_results = {
+                'accuracy': round(accuracy, 4),
+                'precision': round(precision, 4),
+                'recall': round(recall, 4),
+                'loss': round(loss, 4)
+            }
+
+            print("\n--- Classification Report ---")
+            print(classification_report(y_test, y_pred, target_names=['Not Exoplanet (0)', 'Exoplanet (1)']))
+
+            return history, X_test_scaled, y_test, y_pred
+
+        except Exception as e:
+            import traceback
+            print("❌ Training failed with error:")
+            print(traceback.format_exc())
+            return None, None, None, None
 
     def get_training_results(self):
         """Return the training results"""

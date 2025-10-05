@@ -3,24 +3,47 @@ import os
 import json
 import pandas as pd
 import numpy as np
-from deep_learning_model import ExoplanetDeepLearningModel
+from config import config
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Load configuration
+config_name = os.environ.get('FLASK_ENV', 'default')
+app.config.from_object(config[config_name])
 
 # Ensure upload directory exists
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = app.config['UPLOAD_FOLDER']
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# Initialize the deep learning model as None, will be created when needed
+dl_model = None
 
-# Initialize the deep learning model
-dl_model = ExoplanetDeepLearningModel()
+def get_model():
+    """Lazy initialization of the deep learning model"""
+    global dl_model
+    if dl_model is None:
+        try:
+            # Import here to avoid issues with TensorFlow during startup
+            from models.deep_learning_model import ExoplanetDeepLearningModel
+            dl_model = ExoplanetDeepLearningModel()
+        except Exception as e:
+            print(f"Warning: Could not initialize model: {e}")
+            dl_model = None
+    return dl_model
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Google Cloud monitoring"""
+    return jsonify({
+        "status": "healthy",
+        "service": "cosmos-explorer",
+        "timestamp": pd.Timestamp.now().isoformat()
+    })
 
 @app.route('/upload_file', methods=['POST'])
 def upload_file():
@@ -76,8 +99,18 @@ def analyze_data():
 @app.route('/train_model', methods=['POST'])
 def train_model():
     try:
+        print("\n=== MODEL TRAINING REQUEST RECEIVED ===")
+        
+        # Get the model instance
+        model = get_model()
+        
+        # Check if model was successfully initialized
+        if model is None:
+            return jsonify({'status': 'error', 'message': 'Model not available. Service may be starting up or there was an error initializing the model.'}), 503
+        
         # Get the uploaded files
         uploaded_files = os.listdir(app.config['UPLOAD_FOLDER'])
+        print(f"Found {len(uploaded_files)} files in upload folder")
         
         if not uploaded_files:
             return jsonify({'status': 'error', 'message': 'No files uploaded for training'}), 400
@@ -86,11 +119,16 @@ def train_model():
         all_dataframes = []
         for filename in uploaded_files:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            print(f"Processing file: {file_path}")
             if os.path.exists(file_path):
-                df = dl_model.load_and_clean_data(file_path)
+                df = model.load_and_clean_data(file_path)
                 if not df.empty:
-                    all_dataframes.append(df)
                     print(f"Loaded {len(df)} rows from {filename}")
+                    all_dataframes.append(df)
+                else:
+                    print(f"No data loaded from {filename}")
+            else:
+                print(f"File not found: {file_path}")
         
         if not all_dataframes:
             return jsonify({'status': 'error', 'message': 'No valid data found in uploaded files'}), 400
@@ -100,22 +138,34 @@ def train_model():
         print(f"\n--- Data Consolidation Complete. Total rows: {combined_df.shape[0]} ---")
         
         # Preprocess data
-        X, y = dl_model.preprocess_data(combined_df)
+        X, y = model.preprocess_data(combined_df)
+        print(f"After preprocessing - X shape: {X.shape if not X.empty else 'Empty'}, y shape: {y.shape if not y.empty else 'Empty'}")
         
         # Check if preprocessing was successful
         if X.empty or y.empty:
             return jsonify({'status': 'error', 'message': 'Failed to preprocess data. Check that your CSV files contain the required columns.'}), 400
         
         print(f"Preprocessed data shape: {X.shape}")
+        print(f"Target distribution: {y.value_counts().to_dict()}")
         
         # Train model
-        history, X_test, y_test, y_pred = dl_model.train(X, y, epochs=50)  # Reduced epochs for demo
+        print("Starting model training...")
+        history, X_test, y_test, y_pred = model.train(X, y, epochs=50)  # Reduced epochs for demo
+        
+        # Check if training was successful
+        if history is None:
+            return jsonify({'status': 'error', 'message': 'Model training failed. Check logs for details.'}), 500
         
         # Save model
-        dl_model.save_model()
+        try:
+            model.save_model()
+            print("Model saved successfully")
+        except Exception as e:
+            print(f"Warning: Could not save model: {e}")
         
         # Get actual training results
-        results = dl_model.get_training_results()
+        results = model.get_training_results()
+        print(f"Training results: {results}")
         
         # Return success response with actual results
         return jsonify({
@@ -127,16 +177,26 @@ def train_model():
                 "recall": f"{results['recall']:.2%}",
                 "loss": f"{results['loss']:.4f}",
                 "total_rows": combined_df.shape[0],
-                "feature_columns": dl_model.feature_columns
+                "feature_columns": getattr(model, 'feature_columns', [])
             }
         }), 200
         
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        print(f"❌ Error in train_model: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'status': 'error', 'message': f'Training failed: {str(e)}'}), 500
 
 @app.route('/get_exoplanet_data')
 def get_exoplanet_data():
     try:
+        # Get the model instance
+        model = get_model()
+        
+        # Check if model was successfully initialized
+        if model is None:
+            return jsonify({'status': 'error', 'message': 'Model not available. Service may be starting up or there was an error initializing the model.'}), 503
+        
         # Get the uploaded files
         uploaded_files = os.listdir(app.config['UPLOAD_FOLDER'])
         
@@ -148,7 +208,7 @@ def get_exoplanet_data():
         for filename in uploaded_files:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             if os.path.exists(file_path):
-                df = dl_model.load_and_clean_data(file_path)
+                df = model.load_and_clean_data(file_path)
                 if not df.empty:
                     all_dataframes.append(df)
         
@@ -159,7 +219,7 @@ def get_exoplanet_data():
         combined_df = pd.concat(all_dataframes, ignore_index=True)
         
         # Preprocess data
-        X, y = dl_model.preprocess_data(combined_df)
+        X, y = model.preprocess_data(combined_df)
         
         # Check if preprocessing was successful
         if X.empty or y.empty:
@@ -168,10 +228,10 @@ def get_exoplanet_data():
         # If model is trained, make predictions
         predictions = []
         prediction_probabilities = []
-        if dl_model.model is not None:
+        if model.model is not None:
             try:
                 # Make predictions on the data
-                pred, pred_proba = dl_model.predict(X)
+                pred, pred_proba = model.predict(X)
                 predictions = pred.flatten().tolist()
                 prediction_probabilities = pred_proba.flatten().tolist()
             except Exception as e:
@@ -251,5 +311,12 @@ def get_exoplanet_data():
         traceback.print_exc()
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+# For Google App Engine compatibility
+app = app
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 8080))
+    # Add a startup delay to allow for proper initialization
+    import time
+    time.sleep(2)
+    app.run(host='0.0.0.0', port=port, debug=False)

@@ -1,0 +1,42 @@
+# Created by gcloud automatically
+.git
+.gitignore
+README.md
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.coverage
+.tox/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.log
+
+# Large data files (these should be uploaded separately if needed)
+uploads/
+*.csv
+
+# Model files (these should be regenerated on deployment)
+models/*.h5
+models/*.pkl
