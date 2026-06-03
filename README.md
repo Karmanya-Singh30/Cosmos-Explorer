@@ -16,13 +16,13 @@ The project automates the analysis of large-scale astronomical datasets by proce
 
 ## Tech Stack
 
--> Python
--> Flask
--> Pandas
--> NumPy
--> Scikit-Learn / Deep Learning Models
--> HTML, CSS, JavaScript
--> Google Cloud Platform
+* Python
+* Flask
+* Pandas
+* NumPy
+* Scikit-Learn / Deep Learning Models
+* HTML, CSS, JavaScript
+* Google Cloud Platform
 
 ## Applications
 
