@@ -1,19 +1,35 @@
 # Cosmos Explorer
 
-Cosmos Explorer is an exoplanet detection application that uses machine learning to identify potential exoplanets from astronomical data.
+Cosmos Explorer is an AI-powered exoplanet detection and classification platform that uses machine learning to identify potential exoplanets from astronomical datasets collected by NASA's Kepler, K2, and TESS missions.
 
-## Features
+## Overview
 
-- Upload and analyze exoplanet data from various sources (Kepler, TESS, K2)
-- Train a deep learning model to classify exoplanet candidates
-- Visualize exoplanet data and model predictions
-- Interactive dashboard with detailed exoplanet information
+The project automates the analysis of large-scale astronomical datasets by processing planetary features such as orbital period, transit duration, and planetary radius. Machine learning models are used to classify celestial objects as confirmed exoplanets, candidates, or false positives.
 
-## Prerequisites
+## Key Features
 
-- Python 3.9 or higher
-- Google Cloud SDK (for deployment)
-- Required Python packages (see requirements.txt)
+1. Upload and analyze exoplanet datasets from NASA missions
+2. Machine learning-based exoplanet classification
+3. Interactive dashboard for visualization and exploration
+4. Real-time prediction and model evaluation
+5. Automated processing of large astronomical datasets
+
+## Tech Stack
+
+Python
+Flask
+Pandas
+NumPy
+Scikit-Learn / Deep Learning Models
+HTML, CSS, JavaScript
+Google Cloud Platform
+
+## Applications
+
+Astronomical research
+Space science education
+Exoplanet candidate screening
+Data-driven astrophysics studies
 
 ## Local Installation
 
