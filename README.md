@@ -1,5 +1,7 @@
 # Cosmos Explorer
 
+![Dashboard](screenshots/dashboard.jpg)
+
 Cosmos Explorer is an AI-powered exoplanet detection and classification platform that uses machine learning to identify potential exoplanets from astronomical datasets collected by NASA's Kepler, K2, and TESS missions.
 
 ## Overview
@@ -23,6 +25,18 @@ The project automates the analysis of large-scale astronomical datasets by proce
 * Scikit-Learn / Deep Learning Models
 * HTML, CSS, JavaScript
 * Google Cloud Platform
+
+## Data Upload & Model Configuration
+
+Users can upload Kepler, K2, or TESS datasets and configure machine learning hyperparameters before training and analysis.
+
+![Upload Data](screenshots/upload-data.jpg)
+
+## Exoplanet Analysis
+
+The platform provides detailed orbital characteristics, physical properties, classification confidence, and transit curve visualizations.
+
+![Planet Analysis](screenshots/planet-analysis.jpg)
 
 ## Applications
 
